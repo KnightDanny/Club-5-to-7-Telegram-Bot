@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import os
 
-BOT_TOKEN = os.getenv("7613564885:AAFC0O4MbziGreLlKd9hJd8I1fje8eJfkzQ")  # Read from environment variable
+BOT_TOKEN = os.getenv(7613564885:AAFC0O4MbziGreLlKd9hJd8I1fje8eJfkzQ)  # Read from environment variable
 NEXT_MEETUP = "Sunday, July 21st at 5:00 PM"
 
 async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
