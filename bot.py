@@ -4,7 +4,7 @@ import os
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")  # Read from environment variable
 # Use a more current date for the example, reflecting the current time
-NEXT_MEETUP = "Sunday, July 20 at 5:00 PM" # Updated example date
+NEXT_MEETUP = "Saturday, August 9 at 5:00 PM" # Updated example date
 
 # --- New: Command to start the bot and list commands ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
