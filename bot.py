@@ -1,8 +1,8 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import os
-import uvicorn # You'd need to add 'uvicorn' to your poetry dependencies
-from fastapi import FastAPI # You'd need to add 'fastapi' to your poetry dependencies
+import uvicorn
+from fastapi import FastAPI 
 import asyncio
 import threading
 
