@@ -3,15 +3,15 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import os
 import uvicorn
 from fastapi import FastAPI
-import asyncio # Keep this import
-import threading
+from telegram import __version__ as TG_VER # To check version for webhook handler
 
-# --- Configuration (at the very top) ---
+# --- Configuration ---
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-NEXT_MEETUP = "Sunday, July 20 at 5:00 PM" # Using a placeholder date
-
-# --- FastAPI App Definition (needs to be defined before any decorators like @app_web.get) ---
-app_web = FastAPI()
+NEXT_MEETUP = "Sunday, July 20 at 5:00 PM"
+PORT = int(os.environ.get("PORT", 8000)) # Get port from Render
+# IMPORTANT: Replace YOUR_RENDER_SERVICE_URL with your actual Render service URL
+# It will look something like https://your-service-name.onrender.com
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL") # This will be set on Render
 
 # --- Telegram Bot Functions ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -35,33 +35,41 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"🎬 The next movie club meetup is on:\n📅 {NEXT_MEETUP}")
 
-# --- Dummy Web Server Endpoint for Render's Health Check ---
-@app_web.get("/")
+# --- FastAPI Application ---
+app = FastAPI() # Renamed to 'app' to avoid conflict if you use app_web elsewhere
+
+# Endpoint for Telegram to send updates to
+@app.post("/webhook") # This is the path Telegram will send updates to
+async def telegram_webhook(update: dict):
+    # Process the update from Telegram
+    await application.update_queue.put(Update.de_json(update, application.bot))
+    return {"status": "ok"}
+
+# Basic health check for Render
+@app.get("/")
 async def root():
-    return {"message": "Telegram bot is running in polling mode."}
+    return {"message": "Telegram bot webhook server is running."}
 
-# --- Function to run the Telegram bot polling ---
-def run_telegram_bot_polling():
-    # *** CRITICAL FIX: Set up an event loop for this thread ***
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
+# --- Main execution block ---
+if __name__ == '__main__':
+    # Build the Application and add handlers
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("time", time_command))
 
-    # Now run the polling loop using the newly created event loop
-    application.run_polling(poll_interval=1.0) # poll_interval is good for stability
+    # Set up webhook (important step!)
+    # Check if the Telegram Bot API version is 20.8+ as the method changed slightly
+    if TG_VER.startswith('20.'): # For python-telegram-bot v20.x
+        webhook_path = "/webhook" # Match the @app.post("/webhook") path
+        application.updater.bot.set_webhook(url=f"{WEBHOOK_URL}{webhook_path}")
+        print(f"Webhook set to: {WEBHOOK_URL}{webhook_path}")
+    else:
+        # Fallback for older versions or if webhook method changes again
+        # Consider checking python-telegram-bot docs for your exact version if not 20.x
+        print("Warning: Webhook setup might need adjustment for non-v20.x p-t-b")
 
-# --- Main execution block ---
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8000))
 
-    # Start the Telegram bot polling in a separate thread
-    telegram_thread = threading.Thread(target=run_telegram_bot_polling)
-    telegram_thread.start()
-
-    # Run the dummy web server
-    # Uvicorn itself manages its own asyncio loop in the main thread
-    uvicorn.run(app_web, host="0.0.0.0", port=port)
+    # Run the FastAPI server which will handle webhooks
+    # Use an external FastAPI worker to manage the lifespan and webhook processing
+    uvicorn.run(app, host="0.0.0.0", port=PORT, lifespan="on") # lifespan="on" is important for FastAPI apps with async initialization
