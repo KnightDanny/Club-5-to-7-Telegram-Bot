@@ -10,6 +10,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")  # Read from environment variable
 # Use a more current date for the example, reflecting the current time
 NEXT_MEETUP = "Saturday, August 9 at 5:00 PM" # Updated example date
 
+app_web = FastAPI()
 # --- New: Command to start the bot and list commands ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = (
