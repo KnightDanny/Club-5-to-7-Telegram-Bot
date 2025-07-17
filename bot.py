@@ -2,16 +2,18 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import os
 import uvicorn
-from fastapi import FastAPI 
-import asyncio
+from fastapi import FastAPI
+import asyncio # Keep this import
 import threading
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")  # Read from environment variable
-# Use a more current date for the example, reflecting the current time
-NEXT_MEETUP = "Saturday, August 9 at 5:00 PM" # Updated example date
+# --- Configuration (at the very top) ---
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+NEXT_MEETUP = "Sunday, July 20 at 5:00 PM" # Using a placeholder date
 
+# --- FastAPI App Definition (needs to be defined before any decorators like @app_web.get) ---
 app_web = FastAPI()
-# --- New: Command to start the bot and list commands ---
+
+# --- Telegram Bot Functions ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = (
         "Hello! 👋 I'm your Club 5 to 7 Telegram Bot.\n"
@@ -22,7 +24,6 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(welcome_message)
 
-# --- New: Command to provide help/list commands ---
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     help_message = (
         "Here are the commands you can use with me:\n"
@@ -31,30 +32,36 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(help_message)
 
-
 async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"🎬 The next movie club meetup is on:\n📅 {NEXT_MEETUP}")
 
+# --- Dummy Web Server Endpoint for Render's Health Check ---
 @app_web.get("/")
 async def root():
     return {"message": "Telegram bot is running in polling mode."}
 
-# Function to run the Telegram bot polling
+# --- Function to run the Telegram bot polling ---
 def run_telegram_bot_polling():
+    # *** CRITICAL FIX: Set up an event loop for this thread ***
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("time", time_command))
-    application.run_polling(poll_interval=1.0) # Add poll_interval to prevent rapid polling if issues
 
+    # Now run the polling loop using the newly created event loop
+    application.run_polling(poll_interval=1.0) # poll_interval is good for stability
+
+# --- Main execution block ---
 if __name__ == '__main__':
-    # Get the port from Render's environment variable
     port = int(os.environ.get("PORT", 8000))
 
-    # Run the Telegram bot polling in a separate thread
-    # This prevents the web server from blocking the bot, and vice versa
+    # Start the Telegram bot polling in a separate thread
     telegram_thread = threading.Thread(target=run_telegram_bot_polling)
     telegram_thread.start()
 
     # Run the dummy web server
+    # Uvicorn itself manages its own asyncio loop in the main thread
     uvicorn.run(app_web, host="0.0.0.0", port=port)
