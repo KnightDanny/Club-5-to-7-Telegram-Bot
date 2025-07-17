@@ -30,14 +30,26 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"🎬 The next movie club meetup is on:\n📅 {NEXT_MEETUP}")
 
-if __name__ == '__main__':
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+@app_web.get("/")
+async def root():
+    return {"message": "Telegram bot is running in polling mode."}
 
-    # Register the new command handlers
-    app.add_handler(CommandHandler("start", start_command))
-    app.add_handler(CommandHandler("help", help_command))
-    
-    # Existing handler
-    app.add_handler(CommandHandler("time", time_command))
-    
-    app.run_polling()
+# Function to run the Telegram bot polling
+def run_telegram_bot_polling():
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("time", time_command))
+    application.run_polling(poll_interval=1.0) # Add poll_interval to prevent rapid polling if issues
+
+if __name__ == '__main__':
+    # Get the port from Render's environment variable
+    port = int(os.environ.get("PORT", 8000))
+
+    # Run the Telegram bot polling in a separate thread
+    # This prevents the web server from blocking the bot, and vice versa
+    telegram_thread = threading.Thread(target=run_telegram_bot_polling)
+    telegram_thread.start()
+
+    # Run the dummy web server
+    uvicorn.run(app_web, host="0.0.0.0", port=port)
