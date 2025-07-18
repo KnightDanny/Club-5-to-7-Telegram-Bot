@@ -68,7 +68,7 @@ async def settime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Current time is: `" + NEXT_MEETUP + "`"
         )
         return
-    async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Greets new members when they join the group."""
     for member in update.message.new_chat_members:
         # Avoid welcoming the bot itself if it's added to a group
