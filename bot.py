@@ -170,6 +170,7 @@ if __name__ == '__main__':
         application.add_handler(CommandHandler("start", start_command))
         application.add_handler(CommandHandler("help", help_command))
         application.add_handler(CommandHandler("time", time_command))
+        application.add_handler(CommandHandler("settime", settime_command))
 
         # Initialize the bot within the async context for webhook setup
         # Ensure the webhook URL is properly formed
