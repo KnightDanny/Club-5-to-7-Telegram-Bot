@@ -27,11 +27,9 @@ WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 # --- Telegram Bot Functions ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = (
-        "Hello! 👋 I'm your Club 5 to 7 Telegram Bot.\n"
+        "Hello! 👋 I'm your Club 5 to 7 Companion.\n"
         "I can help you keep track of our movie club meetups.\n\n"
-        "Here are the commands you can use:\n"
-        "🎬 /time - Get the date and time of the next movie club meetup.\n"
-        "❓ /help - See this list of commands again."
+        "Type /help to see a list of commands you can use."
     )
     await update.message.reply_text(welcome_message)
 
