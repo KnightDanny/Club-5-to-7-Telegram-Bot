@@ -8,7 +8,19 @@ from telegram import __version__ as TG_VER
 
 # --- Configuration ---
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-NEXT_MEETUP = "Saturday, August 9 at 5:00 PM"
+# Make NEXT_MEETUP a global variable so it can be modified
+NEXT_MEETUP = os.getenv("INITIAL_MEETUP_TIME", "Sunday, August 9 at 5:00 PM") # Can be set via env var or default
+ADMIN_USER_ID = os.getenv("ADMIN_USER_ID") # Get admin user ID from environment
+
+# Convert ADMIN_USER_ID to an integer for comparison
+if ADMIN_USER_ID:
+    try:
+        ADMIN_USER_ID = int(ADMIN_USER_ID)
+    except ValueError:
+        print("Warning: ADMIN_USER_ID is not a valid integer. Admin features may not work.")
+        ADMIN_USER_ID = None # Set to None if invalid
+else:
+    print("Warning: ADMIN_USER_ID environment variable is not set. Admin features will be disabled.")
 PORT = int(os.environ.get("PORT", 8000))
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
@@ -33,6 +45,45 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"🎬 The next movie club meetup is on:\n📅 {NEXT_MEETUP}")
+
+async def settime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global NEXT_MEETUP # Declare global to modify the variable
+
+    user_id = update.effective_user.id
+    chat_id = update.effective_chat.id # Get chat_id for potential private reply
+
+    # 1. Check if the user is the admin
+    if ADMIN_USER_ID is None:
+        await update.message.reply_text("Admin User ID is not configured. `/settime` command is disabled.")
+        return
+    if user_id != ADMIN_USER_ID:
+        await update.message.reply_text("🚫 You are not authorized to use this command.")
+        return
+
+    # 2. Check if arguments are provided
+    if not context.args:
+        await update.message.reply_text(
+            "Please provide the new meetup time. Example:\n"
+            "`/settime Sunday, August 16 at 6:00 PM`\n"
+            "Current time is: `" + NEXT_MEETUP + "`"
+        )
+        return
+
+    # 3. Parse the new time
+    new_time_str = " ".join(context.args)
+
+    # Basic validation: Check if it's not empty and reasonable length
+    if not new_time_str or len(new_time_str) > 100: # Limit length to prevent abuse
+        await update.message.reply_text("Invalid time format or too long. Please try again.")
+        return
+
+    # Optional: You could add more robust date/time parsing here
+    # For now, we'll store it as a string as per your existing format.
+    # If you need strict parsing, we can look into libraries like dateutil.parser.
+
+    NEXT_MEETUP = new_time_str
+    await update.message.reply_text(f"✅ Movie meetup time updated to: `{NEXT_MEETUP}`")
+    # You might also want to send a notification to the main group if needed
 
 # --- FastAPI Application ---
 app = FastAPI() # Renamed to 'app' to avoid conflict if you use app_web elsewhere
