@@ -107,6 +107,7 @@ async def main():
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("time", time_command))
+    application.add_handler(CommandHandler("settime", settime_command))
 
     # --- CRITICAL FIX: AWAIT set_webhook ---
     if TG_VER.startswith('20.'):
