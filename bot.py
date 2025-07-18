@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 import os
 import uvicorn
 from fastapi import FastAPI
@@ -68,6 +68,29 @@ async def settime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Current time is: `" + NEXT_MEETUP + "`"
         )
         return
+    async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Greets new members when they join the group."""
+    for member in update.message.new_chat_members:
+        # Avoid welcoming the bot itself if it's added to a group
+        if member.id == context.bot.id:
+            continue
+
+        # Get the first name or full name of the new member
+        member_name = member.first_name
+        if member.last_name:
+            member_name += f" {member.last_name}"
+
+        # Get the name of the chat/group
+        chat_name = update.effective_chat.title if update.effective_chat.title else "this chat"
+
+        # Construct the welcome message
+        welcome_message = (
+            f"Hello, {member_name}! 👋 Welcome to {chat_name}!\n"
+            "I'm your Club 5 to 7 Bot. Use /help to see available commands."
+        )
+
+        # Reply to the message that announced the new member
+        await update.message.reply_text(welcome_message)
 
     # 3. Parse the new time
     new_time_str = " ".join(context.args)
@@ -108,6 +131,7 @@ async def main():
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("time", time_command))
     application.add_handler(CommandHandler("settime", settime_command))
+    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members))
 
     # --- CRITICAL FIX: AWAIT set_webhook ---
     if TG_VER.startswith('20.'):
@@ -171,6 +195,7 @@ if __name__ == '__main__':
         application.add_handler(CommandHandler("help", help_command))
         application.add_handler(CommandHandler("time", time_command))
         application.add_handler(CommandHandler("settime", settime_command))
+        application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members))
 
         # Initialize the bot within the async context for webhook setup
         # Ensure the webhook URL is properly formed
