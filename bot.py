@@ -86,7 +86,7 @@ async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE
         # Construct the welcome message
         welcome_message = (
             f"Hello, {member_name}! 👋 Welcome to {chat_name}!\n"
-            "I'm your Club 5 to 7 Bot. Use /help to see available commands."
+            "I'm Cleo, your Club 5 to 7 companion. Use /help to see available commands."
         )
 
         # Reply to the message that announced the new member
