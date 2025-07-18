@@ -3,12 +3,12 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import os
 import uvicorn
 from fastapi import FastAPI
-import asyncio # Make sure this is imported
+import asyncio
 from telegram import __version__ as TG_VER
 
 # --- Configuration ---
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-NEXT_MEETUP = "Sunday, July 20 at 5:00 PM" # Example date from your previous code
+NEXT_MEETUP = "Saturday, August 9 at 5:00 PM"
 PORT = int(os.environ.get("PORT", 8000))
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
