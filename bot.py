@@ -43,7 +43,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     help_message = (
         "Here are the commands you can use with me:\n\n"
-        "⏰ /meetup - See the details of the club's next meetup.\n"
+        "⏰ /meetup - See the details of the club's next meetup.\n\n"
         "❓ /help - See this list of commands again."
     )
     await update.message.reply_text(help_message)
@@ -80,10 +80,11 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "Please provide the new meetup **date**, **time of day**, **location display text**, and **location URL**.\n"
             "Example:\n"
-            "`/setmeetup Aug 16 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema`\n`\n"
+            "/setmeetup Aug 16 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema\n\n"
             "Current Date: " + NEXT_MEETUP_DATE + "\n"
             "Current Time: " + NEXT_MEETUP_TIME_OF_DAY + "\n"
-            "Current Location: " + NEXT_MEETUP_LOCATION_DISPLAY + NEXT_MEETUP_LOCATION_URL
+            "Current Location: " + NEXT_MEETUP_LOCATION_DISPLAY + "\n"
+            "Current URL: "NEXT_MEETUP_LOCATION_URL"
         )
         return
 
@@ -125,10 +126,10 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         f"✅ Movie meetup details updated!\n"
-        f"Date: `{NEXT_MEETUP_DATE}`\n"
-        f"Time: `{NEXT_MEETUP_TIME_OF_DAY}`\n"
-        f"Location Display: `{NEXT_MEETUP_LOCATION_DISPLAY}`\n"
-        f"Location URL: `{NEXT_MEETUP_LOCATION_URL}`"
+        f"Date: {NEXT_MEETUP_DATE}\n"
+        f"Time: {NEXT_MEETUP_TIME_OF_DAY}\n"
+        f"Location Display: {NEXT_MEETUP_LOCATION_DISPLAY}\n"
+        f"Location URL: {NEXT_MEETUP_LOCATION_URL}"
     )
 
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
