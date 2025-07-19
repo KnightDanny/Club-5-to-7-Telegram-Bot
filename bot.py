@@ -84,7 +84,7 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Current Date: " + NEXT_MEETUP_DATE + "\n"
             "Current Time: " + NEXT_MEETUP_TIME_OF_DAY + "\n"
             "Current Location: " + NEXT_MEETUP_LOCATION_DISPLAY + "\n"
-            "Current URL: "NEXT_MEETUP_LOCATION_URL"
+            "Current URL: " + NEXT_MEETUP_LOCATION_URL
         )
         return
 
