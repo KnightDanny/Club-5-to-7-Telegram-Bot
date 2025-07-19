@@ -5,33 +5,32 @@ import uvicorn
 from fastapi import FastAPI
 import asyncio
 from telegram import __version__ as TG_VER
-from telegram.constants import ParseMode # Import ParseMode
+from telegram.constants import ParseMode
 
-# --- Configuration ---
+# The Bot's API token (Check in BotFather or Environment)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# Separate variables for date, time of day, location display, and location URL
+# Variables to be set by group Admins
 NEXT_MEETUP_DATE = os.getenv("INITIAL_MEETUP_DATE", "Sunday, August 9")
 NEXT_MEETUP_TIME_OF_DAY = os.getenv("INITIAL_MEETUP_TIME_OF_DAY", "5:00 PM")
 NEXT_MEETUP_LOCATION_DISPLAY = os.getenv("INITIAL_MEETUP_LOCATION_DISPLAY", "The Coffee Shop")
 NEXT_MEETUP_LOCATION_URL = os.getenv("INITIAL_MEETUP_LOCATION_URL", "https://maps.app.goo.gl/YourCoffeeShopLocation")
 
 
-ADMIN_USER_ID = os.getenv("ADMIN_USER_ID") # Get admin user ID from environment
-
-# Convert ADMIN_USER_ID to an integer for comparison
+ADMIN_USER_ID = os.getenv("ADMIN_USER_ID") # Telegram user ID from environment
+# Check if user ID is actually Admins for the setmeetup commands
 if ADMIN_USER_ID:
     try:
         ADMIN_USER_ID = int(ADMIN_USER_ID)
     except ValueError:
         print("Warning: ADMIN_USER_ID is not a valid integer. Admin features may not work.")
-        ADMIN_USER_ID = None # Set to None if invalid
+        ADMIN_USER_ID = None
 else:
     print("Warning: ADMIN_USER_ID environment variable is not set. Admin features will be disabled.")
 PORT = int(os.environ.get("PORT", 8000))
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
-# --- Telegram Bot Functions ---
+# Available commands to use in bot 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = (
         "Hello! 👋 I'm Cleo, your Club 5 to 7 Companion.\n\n"
@@ -49,7 +48,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(help_message)
 
 async def meetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Construct the hyperlink using HTML format
     location_hyperlink = f'<a href="{NEXT_MEETUP_LOCATION_URL}">{NEXT_MEETUP_LOCATION_DISPLAY}</a>'
     meetup_message = (
         "🎬 Club 5 to 7's next meetup:\n\n"
@@ -58,11 +56,10 @@ async def meetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🕒 {NEXT_MEETUP_TIME_OF_DAY}\n\n"
         "We look forward to seeing you there!"
     )
-    # IMPORTANT: Specify parse_mode=ParseMode.HTML
     await update.message.reply_text(meetup_message, parse_mode=ParseMode.HTML)
 
 async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Modify all four global variables
+
     global NEXT_MEETUP_DATE, NEXT_MEETUP_TIME_OF_DAY, NEXT_MEETUP_LOCATION_DISPLAY, NEXT_MEETUP_LOCATION_URL
 
     user_id = update.effective_user.id
@@ -75,7 +72,6 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🚫 You are not authorized to use this command.")
         return
 
-    # Now expecting four parts: date, time of day, location display text, and location URL
     if len(context.args) < 4:
         await update.message.reply_text(
             "Please provide the new meetup **date**, **time of day**, **location display text**, and **location URL**.\n"
@@ -88,9 +84,8 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # Join all arguments and then split by the first three semicolons found.
     full_input = " ".join(context.args)
-    parts = full_input.split(';', 3) # Split only on the first three semicolons
+    parts = full_input.split(';', 3)
 
     if len(parts) != 4:
         await update.message.reply_text(
@@ -105,16 +100,15 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     new_location_url_str = parts[3].strip()
 
     # Basic validation
-    if not new_date_str or len(new_date_str) > 50: # Adjust max length for just date
+    if not new_date_str or len(new_date_str) > 50: 
         await update.message.reply_text("Invalid date format or too long. Please try again.")
         return
-    if not new_time_of_day_str or len(new_time_of_day_str) > 50: # Adjust max length for just time
+    if not new_time_of_day_str or len(new_time_of_day_str) > 50: 
         await update.message.reply_text("Invalid time of day format or too long. Please try again.")
         return
     if not new_location_display_str or len(new_location_display_str) > 100:
         await update.message.reply_text("Invalid location display text format or too long. Please try again.")
         return
-    # Basic URL validation (you might want a more robust regex for production)
     if not new_location_url_str or not (new_location_url_str.startswith("http://") or new_location_url_str.startswith("https://")):
         await update.message.reply_text("Invalid location URL. It must start with http:// or https://")
         return
