@@ -30,11 +30,14 @@ else:
 PORT = int(os.environ.get("PORT", 8000))
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
-# Available commands to use in bot 
+# An array for movie suggestions
+MOVIE_SUGGESTIONS = []
+
+# Available commands to use in bot
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = (
         "Hello! 👋 I'm Cleo, your Club 5 to 7 Companion.\n\n"
-        "I can help you keep track of our movie club meetups.\n\n"
+        "I can help you keep track of our movie club meetups and also recieve your movie suggestions. You can also view suggestions others have made\n\n"
         "Type /help to see a list of commands you can use."
     )
     await update.message.reply_text(welcome_message)
@@ -43,6 +46,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     help_message = (
         "Here are the commands you can use with me:\n\n"
         "⏰ /meetup - See the details of the club's next meetup.\n\n"
+        "💡 /suggest [Movie Title] - Suggest a movie for the club to watch.\n\n" # Added /suggest
+        "🎬 /suggestions - See the list of suggested movies.\n\n" # Added /suggestions
         "❓ /help - See this list of commands again."
     )
     await update.message.reply_text(help_message)
@@ -100,10 +105,10 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     new_location_url_str = parts[3].strip()
 
     # Basic validation
-    if not new_date_str or len(new_date_str) > 50: 
+    if not new_date_str or len(new_date_str) > 50:
         await update.message.reply_text("Invalid date format or too long. Please try again.")
         return
-    if not new_time_of_day_str or len(new_time_of_day_str) > 50: 
+    if not new_time_of_day_str or len(new_time_of_day_str) > 50:
         await update.message.reply_text("Invalid time of day format or too long. Please try again.")
         return
     if not new_location_display_str or len(new_location_display_str) > 100:
@@ -125,6 +130,43 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Location Display: {NEXT_MEETUP_LOCATION_DISPLAY}\n"
         f"Location URL: {NEXT_MEETUP_LOCATION_URL}"
     )
+async def suggest(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global MOVIE_SUGGESTIONS 
+
+    if not context.args:
+        await update.message.reply_text(
+            "Please provide the movie title you want to suggest. Example:\n"
+            "`/suggest The Matrix`"
+        )
+        return
+
+    movie_title = " ".join(context.args).strip()
+
+    if not movie_title:
+        await update.message.reply_text("Movie title cannot be empty.")
+        return
+    if len(movie_title) > 200: # Limit
+        await update.message.reply_text("Movie title is too long. Please shorten it.")
+        return
+
+    if movie_title not in MOVIE_SUGGESTIONS:
+        MOVIE_SUGGESTIONS.append(movie_title)
+        await update.message.reply_text(f"🎬 Thank you! '{movie_title}' has been added to the suggestions list.")
+    else:
+        await update.message.reply_text(f"'{movie_title}' is already in the suggestions list. Thanks for reminding!")
+
+async def show_suggestions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not MOVIE_SUGGESTIONS:
+        await update.message.reply_text("💡 No movie suggestions yet! Be the first to add one with `/suggest [Movie Title]`")
+        return
+
+    suggestions_list = "\n".join([f"{i+1}. {movie}" for i, movie in enumerate(MOVIE_SUGGESTIONS)])
+    await update.message.reply_text(
+        "🎬 Current Movie Suggestions:\n"
+        f"{suggestions_list}\n\n"
+        "Vote for your favorite next week!"
+    )
+
 
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Greets new members when they join the group."""
@@ -140,6 +182,7 @@ async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         welcome_message = (
             f"Hello, {member_name}! 👋 Welcome to {chat_name}!\n"
+            "I'm Cleo, your Club 5 to 7 companion. Use /help to see available commands." # Added note to use /help
         )
         await update.message.reply_text(welcome_message)
 
@@ -155,7 +198,6 @@ async def telegram_webhook(update: dict):
 async def root():
     return {"message": "Telegram bot webhook server is running."}
 
-# --- Main execution block (now asynchronous) ---
 async def run_server():
     global application
     application = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -163,6 +205,9 @@ async def run_server():
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("meetup", meetup_command))
     application.add_handler(CommandHandler("setmeetup", setmeetup_command))
+    application.add_handler(CommandHandler("suggest", suggest))
+    application.add_handler(CommandHandler("suggestions", show_suggestions))
+    
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members))
 
     if not WEBHOOK_URL:
