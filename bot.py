@@ -66,6 +66,22 @@ async def settime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Current time is: `" + NEXT_MEETUP + "`"
         )
         return
+    # 3. Parse the new time
+    new_time_str = " ".join(context.args)
+
+    # Basic validation: Check if it's not empty and reasonable length
+    if not new_time_str or len(new_time_str) > 100: # Limit length to prevent abuse
+        await update.message.reply_text("Invalid time format or too long. Please try again.")
+        return
+
+    # Optional: You could add more robust date/time parsing here
+    # For now, we'll store it as a string as per your existing format.
+    # If you need strict parsing, we can look into libraries like dateutil.parser.
+
+    NEXT_MEETUP = new_time_str
+    await update.message.reply_text(f"✅ Movie meetup time updated to: `{NEXT_MEETUP}`")
+    # You might also want to send a notification to the main group if needed
+
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Greets new members when they join the group."""
     for member in update.message.new_chat_members:
@@ -90,21 +106,6 @@ async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE
         # Reply to the message that announced the new member
         await update.message.reply_text(welcome_message)
 
-    # 3. Parse the new time
-    new_time_str = " ".join(context.args)
-
-    # Basic validation: Check if it's not empty and reasonable length
-    if not new_time_str or len(new_time_str) > 100: # Limit length to prevent abuse
-        await update.message.reply_text("Invalid time format or too long. Please try again.")
-        return
-
-    # Optional: You could add more robust date/time parsing here
-    # For now, we'll store it as a string as per your existing format.
-    # If you need strict parsing, we can look into libraries like dateutil.parser.
-
-    NEXT_MEETUP = new_time_str
-    await update.message.reply_text(f"✅ Movie meetup time updated to: `{NEXT_MEETUP}`")
-    # You might also want to send a notification to the main group if needed
 
 # --- FastAPI Application ---
 app = FastAPI() # Renamed to 'app' to avoid conflict if you use app_web elsewhere
