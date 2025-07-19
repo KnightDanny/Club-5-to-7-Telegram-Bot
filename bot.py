@@ -28,7 +28,7 @@ WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 # --- Telegram Bot Functions ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = (
-        "Hello! 👋 I'm your Club 5 to 7 Companion.\n"
+        "Hello! 👋 I'm Cleo, your Club 5 to 7 Companion.\n"
         "I can help you keep track of our movie club meetups.\n\n"
         "Type /help to see a list of commands you can use."
     )
@@ -36,7 +36,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     help_message = (
-        "Here are the commands you can use with me:\n"
+        "Here are the commands you can use with me:\n\n"
         "⏰ /meetup - See the date, time, & location of the club's next meetup.\n"
         "❓ /help - See this list of commands again."
     )
@@ -44,7 +44,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def meetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     meetup_message = (
-        "🎬 Club 5 to 7's next meetup:\n"
+        "🎬 Club 5 to 7's next meetup:\n\n"
         f"📅 {NEXT_MEETUP_TIME}\n"
         f"📍 {NEXT_MEETUP_LOCATION}\n"
         "We look forward to seeing you there!"
@@ -72,8 +72,8 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Please provide both the new meetup **time** and **location**.\n"
             "Example:\n"
             "`/setmeetup Sunday, August 16 at 6:00 PM ; Downtown Cinema`\n" # Using semicolon as separator
-            "Current time: `" + NEXT_MEETUP_TIME + "`\n"
-            "Current location: `" + NEXT_MEETUP_LOCATION + "`"
+            "Current time: " + NEXT_MEETUP_TIME + "\n"
+            "Current location: " + NEXT_MEETUP_LOCATION + ""
         )
         return
 
@@ -106,8 +106,8 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         f"✅ Movie meetup details updated!\n"
-        f"Time: `{NEXT_MEETUP_TIME}`\n"
-        f"Location: `{NEXT_MEETUP_LOCATION}`"
+        f"Time: {NEXT_MEETUP_TIME}\n"
+        f"Location: {NEXT_MEETUP_LOCATION}"
     )
     # You might also want to send a notification to the main group if needed
 
