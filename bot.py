@@ -146,7 +146,6 @@ async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         welcome_message = (
             f"Hello, {member_name}! 👋 Welcome to {chat_name}!\n"
-            "I'm Cleo, your Club 5 to 7 companion. Use /help to see available commands."
         )
         await update.message.reply_text(welcome_message)
 
