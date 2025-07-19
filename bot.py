@@ -9,7 +9,8 @@ from telegram import __version__ as TG_VER
 # --- Configuration ---
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 # Make NEXT_MEETUP a global variable so it can be modified
-NEXT_MEETUP = os.getenv("INITIAL_MEETUP_TIME", "Sunday, August 9 at 5:00 PM") # Can be set via env var or default
+NEXT_MEETUP_TIME = os.getenv("INITIAL_MEETUP_TIME", "Sunday, August 9 at 5:00 PM")
+NEXT_MEETUP_LOCATION = os.getenv("INITIAL_MEETUP_LOCATION", "The Coffee Shop")
 ADMIN_USER_ID = os.getenv("ADMIN_USER_ID") # Get admin user ID from environment
 
 # Convert ADMIN_USER_ID to an integer for comparison
@@ -36,16 +37,22 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     help_message = (
         "Here are the commands you can use with me:\n"
-        "🎬 /time - Get the date and time of the next movie club meetup.\n"
+        "⏰ /meetup - See the date, time, & location of the club's next meetup.\n"
         "❓ /help - See this list of commands again."
     )
     await update.message.reply_text(help_message)
 
-async def time_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(f"🎬 The next movie club meetup is on:\n📅 {NEXT_MEETUP}")
+async def meetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    meetup_message = (
+        "🎬 Club 5 to 7's next meetup:\n"
+        f"📅 {NEXT_MEETUP_TIME}\n"
+        f"📍 {NEXT_MEETUP_LOCATION}\n"
+        "We look forward to seeing you there!"
+    )
+    await update.message.reply_text(meetup_message)
 
-async def settime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global NEXT_MEETUP # Declare global to modify the variable
+async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global NEXT_MEETUP_TIME, NEXT_MEETUP_LOCATION # Declare global to modify the variables
 
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id # Get chat_id for potential private reply
@@ -58,29 +65,50 @@ async def settime_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🚫 You are not authorized to use this command.")
         return
 
-    # 2. Check if arguments are provided
-    if not context.args:
+    # 2. Check if arguments are provided correctly (expecting 2 parts: time and location)
+    if len(context.args) < 2:
         await update.message.reply_text(
-            "Please provide the new meetup time. Example:\n"
-            "`/settime Sunday, August 16 at 6:00 PM`\n"
-            "Current time is: `" + NEXT_MEETUP + "`"
+            "Please provide both the new meetup **time** and **location**.\n"
+            "Example:\n"
+            "`/setmeetup Sunday, August 16 at 6:00 PM ; Downtown Cinema`\n" # Using semicolon as separator
+            "Current time: `" + NEXT_MEETUP_TIME + "`\n"
+            "Current location: `" + NEXT_MEETUP_LOCATION + "`"
         )
         return
-    # 3. Parse the new time
-    new_time_str = " ".join(context.args)
 
-    # Basic validation: Check if it's not empty and reasonable length
-    if not new_time_str or len(new_time_str) > 100: # Limit length to prevent abuse
-        await update.message.reply_text("Invalid time format or too long. Please try again.")
+    # To make parsing easier, let's assume the admin separates time and location
+    # with a specific delimiter, e.g., a semicolon ';'.
+    # Join all arguments and then split by the first semicolon found.
+    full_input = " ".join(context.args)
+    parts = full_input.split(';', 1) # Split only on the first semicolon
+
+    if len(parts) != 2:
+        await update.message.reply_text(
+            "Please ensure you separate the time and location with a **semicolon (`;`)**.\n"
+            "Example: `/setmeetup Sunday, August 16 at 6:00 PM ; Downtown Cinema`"
+        )
         return
 
-    # Optional: You could add more robust date/time parsing here
-    # For now, we'll store it as a string as per your existing format.
-    # If you need strict parsing, we can look into libraries like dateutil.parser.
+    new_time_str = parts[0].strip()
+    new_location_str = parts[1].strip()
 
-    NEXT_MEETUP = new_time_str
-    await update.message.reply_text(f"✅ Movie meetup time updated to: `{NEXT_MEETUP}`")
-    # You might also want to send a notification to the main group if needed
+    # Basic validation: Check if they are not empty and reasonable length
+    if not new_time_str or len(new_time_str) > 100:
+        await update.message.reply_text("Invalid time format or too long. Please try again.")
+        return
+    if not new_location_str or len(new_location_str) > 100: # Max length for location
+        await update.message.reply_text("Invalid location format or too long. Please try again.")
+        return
+
+    NEXT_MEETUP_TIME = new_time_str
+    NEXT_MEETUP_LOCATION = new_location_str
+
+    await update.message.reply_text(
+        f"✅ Movie meetup details updated!\n"
+        f"Time: `{NEXT_MEETUP_TIME}`\n"
+        f"Location: `{NEXT_MEETUP_LOCATION}`"
+    )
+    # You might also want to send a notification to the main group if neededd
 
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Greets new members when they join the group."""
@@ -128,8 +156,8 @@ async def main():
     application = ApplicationBuilder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("time", time_command))
-    application.add_handler(CommandHandler("settime", settime_command))
+    application.add_handler(CommandHandler("meetup", meetup_command))
+    application.add_handler(CommandHandler("setmeetup", setmeetup_command))
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members))
 
     # --- CRITICAL FIX: AWAIT set_webhook ---
@@ -192,8 +220,8 @@ if __name__ == '__main__':
         application = ApplicationBuilder().token(BOT_TOKEN).build()
         application.add_handler(CommandHandler("start", start_command))
         application.add_handler(CommandHandler("help", help_command))
-        application.add_handler(CommandHandler("time", time_command))
-        application.add_handler(CommandHandler("settime", settime_command))
+        application.add_handler(CommandHandler("meetup", meetup_command))
+        application.add_handler(CommandHandler("setmeetup", setmeetup_command))
         application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members))
 
         # Initialize the bot within the async context for webhook setup
