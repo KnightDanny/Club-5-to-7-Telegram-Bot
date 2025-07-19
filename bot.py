@@ -83,7 +83,7 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "`/setmeetup Aug 16 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema`\n`\n"
             "Current Date: " + NEXT_MEETUP_DATE + "\n"
             "Current Time: " + NEXT_MEETUP_TIME_OF_DAY + "\n"
-            "Current Location: " + NEXT_MEETUP_LOCATION_DISPLAY + " (" + NEXT_MEETUP_LOCATION_URL + ")
+            "Current Location: " + NEXT_MEETUP_LOCATION_DISPLAY + NEXT_MEETUP_LOCATION_URL
         )
         return
 
