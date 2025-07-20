@@ -36,39 +36,44 @@ THEME_SUGGESTIONS = []
 
 # Available commands to use in bot
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    welcome_message = (
-        "Hello! 👋 I'm Cleo, your Club 5 to 7 Companion.\n\n"
-        "I can help you keep track of our movie club meetups and also receive your movie and theme suggestions. You can also view suggestions others have made\n\n"
-        "Type /help to see a list of commands you can use."
-    )
-    await update.message.reply_text(welcome_message)
+    if update.message: # Added check
+        welcome_message = (
+            "Hello! 👋 I'm Cleo, your Club 5 to 7 Companion.\n\n"
+            "I can help you keep track of our movie club meetups and also receive your movie and theme suggestions. You can also view suggestions others have made\n\n"
+            "Type /help to see a list of commands you can use."
+        )
+        await update.message.reply_text(welcome_message)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    help_message = (
-        "Here are the commands you can use with me:\n\n"
-        "⏰ /meetup - See the details of the club's next meetup.\n\n"
-        "🎬 /suggestfilm [Film Title] - Suggest a film for the club to watch.\n" 
-        "💡 /suggesttheme [Theme Suggestion] - Suggest a theme for the month.\n\n" 
-        "🎥 /suggestionsfilm - See the list of suggested films.\n" 
-        "🎨 /suggestionstheme - See the list of suggested themes.\n\n"
-        "❓ /help - See this list of commands again."
-    )
-    await update.message.reply_text(help_message)
+    if update.message: # Added check
+        help_message = (
+            "Here are the commands you can use with me:\n\n"
+            "⏰ /meetup - See the details of the club's next meetup.\n\n"
+            "🎬 /suggestfilm [Film Title] - Suggest a film for the club to watch.\n"
+            "💡 /suggesttheme [Theme Suggestion] - Suggest a theme for the month.\n\n"
+            "🎥 /suggestionsfilm - See the list of suggested films.\n"
+            "🎨 /suggestionstheme - See the list of suggested themes.\n\n"
+            "❓ /help - See this list of commands again."
+        )
+        await update.message.reply_text(help_message)
 
 async def meetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    location_hyperlink = f'<a href="{NEXT_MEETUP_LOCATION_URL}">{NEXT_MEETUP_LOCATION_DISPLAY}</a>'
-    meetup_message = (
-        "🎬 Club 5 to 7's next meetup:\n\n"
-        f"📍 {location_hyperlink}\n"
-        f"📅 {NEXT_MEETUP_DATE}\n"
-        f"🕒 {NEXT_MEETUP_TIME_OF_DAY}\n\n"
-        "We look forward to seeing you there!"
-    )
-    await update.message.reply_text(meetup_message, parse_mode=ParseMode.HTML)
+    if update.message: # Added check
+        location_hyperlink = f'<a href="{NEXT_MEETUP_LOCATION_URL}">{NEXT_MEETUP_LOCATION_DISPLAY}</a>'
+        meetup_message = (
+            "🎬 Club 5 to 7's next meetup:\n\n"
+            f"📍 {location_hyperlink}\n"
+            f"📅 {NEXT_MEETUP_DATE}\n"
+            f"🕒 {NEXT_MEETUP_TIME_OF_DAY}\n\n"
+            "We look forward to seeing you there!"
+        )
+        await update.message.reply_text(meetup_message, parse_mode=ParseMode.HTML)
 
 async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     global NEXT_MEETUP_DATE, NEXT_MEETUP_TIME_OF_DAY, NEXT_MEETUP_LOCATION_DISPLAY, NEXT_MEETUP_LOCATION_URL
+
+    if not update.message: # Added check
+        return
 
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
@@ -137,6 +142,9 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def suggest_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global FILM_SUGGESTIONS
 
+    if not update.message: # Added check for update.message
+        return
+
     if not context.args:
         await update.message.reply_text(
             "Please provide the film title you want to suggest. Example:\n"
@@ -162,6 +170,9 @@ async def suggest_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def suggest_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global THEME_SUGGESTIONS
 
+    if not update.message: # Added check for update.message
+        return
+
     if not context.args:
         await update.message.reply_text(
             "Please provide the theme you want to suggest. Example:\n"
@@ -185,8 +196,11 @@ async def suggest_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"'{theme_suggestion}' is already in the theme suggestions list. Thanks for reminding!")
 
 async def show_film_suggestions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message: 
+        return
+
     if not FILM_SUGGESTIONS:
-        await update.message.reply_text("💡 No film suggestions yet! Be the first to add one with `/suggestfilm [Film Title]`") 
+        await update.message.reply_text("💡 No film suggestions yet! Be the first to add one with `/suggestfilm [Film Title]`")
         return
 
     suggestions_list = "\n".join([f"{i+1}. {movie}" for i, movie in enumerate(FILM_SUGGESTIONS)])
@@ -196,8 +210,11 @@ async def show_film_suggestions(update: Update, context: ContextTypes.DEFAULT_TY
     )
 
 async def show_theme_suggestions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message:
+        return
+
     if not THEME_SUGGESTIONS:
-        await update.message.reply_text("💡 No theme suggestions yet! Be the first to add one with `/suggesttheme [Theme Suggestion]`") 
+        await update.message.reply_text("💡 No theme suggestions yet! Be the first to add one with `/suggesttheme [Theme Suggestion]`")
         return
 
     suggestions_list = "\n".join([f"{i+1}. {theme}" for i, theme in enumerate(THEME_SUGGESTIONS)])
@@ -210,6 +227,9 @@ async def show_theme_suggestions(update: Update, context: ContextTypes.DEFAULT_T
 
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Greets new members when they join the group."""
+    if not update.message:
+        return
+
     for member in update.message.new_chat_members:
         if member.id == context.bot.id:
             continue
@@ -222,7 +242,7 @@ async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE
 
         welcome_message = (
             f"Hello, {member_name}! 👋 Welcome to {chat_name}!\n"
-            "I'm Cleo, your Club 5 to 7 companion. Use /help to see available commands." # Added note to use /help
+            "I'm Cleo, your Club 5 to 7 companion. Use /help to see available commands."
         )
         await update.message.reply_text(welcome_message)
 
@@ -231,7 +251,11 @@ app = FastAPI()
 
 @app.post("/webhook")
 async def telegram_webhook(update: dict):
-    await application.update_queue.put(Update.de_json(update, application.bot))
+    try:
+        tg_update = Update.de_json(update, application.bot)
+        await application.update_queue.put(tg_update)
+    except Exception as e:
+        print(f"Error processing webhook update: {e}")
     return {"status": "ok"}
 
 @app.get("/")
@@ -245,11 +269,11 @@ async def run_server():
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("meetup", meetup_command))
     application.add_handler(CommandHandler("setmeetup", setmeetup_command))
-    application.add_handler(CommandHandler("suggestfilm", suggest_film)) 
-    application.add_handler(CommandHandler("suggestionsfilm", show_film_suggestions)) 
-    application.add_handler(CommandHandler("suggesttheme", suggest_theme)) 
+    application.add_handler(CommandHandler("suggestfilm", suggest_film))
+    application.add_handler(CommandHandler("suggestionsfilm", show_film_suggestions))
+    application.add_handler(CommandHandler("suggesttheme", suggest_theme))
     application.add_handler(CommandHandler("suggestionstheme", show_theme_suggestions))
-    
+
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members))
 
     if not WEBHOOK_URL:
@@ -266,9 +290,6 @@ async def run_server():
     config = uvicorn.Config(app, host="0.0.0.0", port=PORT, lifespan="on")
     server = uvicorn.Server(config)
     await server.serve()
-
-    await application.stop()
-    await application.shutdown()
 
 if __name__ == '__main__':
     asyncio.run(run_server())
