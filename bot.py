@@ -221,12 +221,10 @@ async def show_theme_suggestions(update: Update, context: ContextTypes.DEFAULT_T
     await update.message.reply_text(
         "🎨 Current Theme Suggestions:\n"
         f"{suggestions_list}\n\n"
-        "Let's pick a fun theme for our next meetup!"
     )
 
 
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Greets new members when they join the group."""
     if not update.message:
         return
 
