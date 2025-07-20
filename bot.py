@@ -52,12 +52,12 @@ THEME_SUGGESTIONS = []
 if STORAGE_TYPE == "postgresql":
     try:
         import psycopg2
-        from psycopg2 import sql # sql is imported but not explicitly used in provided snippets, kept for potential future use
+        from psycopg2 import sql
     except ImportError:
         print("Error: psycopg2-binary not installed. Please install it with 'pip install psycopg2-binary' if you use PostgreSQL storage.")
-        psycopg2 = None # Mark as unavailable
+        psycopg2 = None
 else:
-    psycopg2 = None # Ensure it's not accidentally used
+    psycopg2 = None
 
 def get_db_connection():
     if not psycopg2 or not DATABASE_URL:
@@ -395,14 +395,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         help_message = (
             "Here are the commands you can use with me:\n\n"
             "⏰ /meetup - See the details of the club's next meetup.\n\n"
-            "🎬 /suggestfilm - Suggest a film for the club to watch.\n" # Changed
-            "💡 /suggesttheme - Suggest a theme for the month.\n\n" # Changed
-            "🎥 /suggestionsfilm - See the list of suggested films.\n"
-            "🎨 /suggestionstheme - See the list of suggested themes.\n\n"
-            "--- Admin Commands (Authorized Users Only) ---\n" # Added back admin section for clarity
-            "🗓️ /setmeetup [Date] ; [Time] ; [Location Display] ; [Location URL] - Set the next meetup details.\n" # Added back example
-            "🗑️ /removefilm [Exact Film Title] - Remove a film from suggestions.\n" # Added back example
-            "🧹 /removetheme [Exact Theme Suggestion] - Remove a theme from suggestions.\n\n" # Added back example
+            "🎬 /suggestfilm - Suggest a film for the club to watch.\n"
+            "💡 /suggesttheme - Suggest a theme for the month.\n\n"
+            "🎥 /filmsuggestions - See the list of suggested films.\n" # RENAMED
+            "🎨 /themesuggestions - See the list of suggested themes.\n\n" # RENAMED
+            "--- Admin Commands (Authorized Users Only) ---\n"
+            "🗓️ /setmeetup [Date] ; [Time] ; [Location Display] ; [Location URL] - Set the next meetup details.\n"
+            "🗑️ /removefilm [Exact Film Title] - Remove a film from suggestions.\n"
+            "🧹 /removetheme [Exact Theme Suggestion] - Remove a theme from suggestions.\n\n"
             "❓ /help - See this list of commands again."
         )
         await update.message.reply_text(help_message)
@@ -428,7 +428,6 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user_id = update.effective_user.id
-    # chat_id = update.effective_chat.id # Not used in this function
 
     if ADMIN_USER_ID is None:
         await update.message.reply_text("Admin User ID is not configured. /setmeetup command is disabled.")
@@ -443,12 +442,12 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "Please provide the new meetup **date**, **time of day**, **location display text**, and **location URL**.\n"
             "Example:\n"
-            "`/setmeetup July 30 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema\n\n\n`" # Fixed backticks
+            "`/setmeetup July 30 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema\n\n\n`"
             f"Current Date: {NEXT_MEETUP_DATE}\n"
             f"Current Time: {NEXT_MEETUP_TIME_OF_DAY}\n"
             f"Current Location: {NEXT_MEETUP_LOCATION_DISPLAY}\n"
             f"Current URL: {NEXT_MEETUP_LOCATION_URL}",
-            parse_mode=ParseMode.MARKDOWN # Added parse_mode
+            parse_mode=ParseMode.MARKDOWN
         )
         return
 
@@ -458,8 +457,8 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(parts) != 4:
         await update.message.reply_text(
             "Please ensure you separate the date, time of day, location display text, and location URL with **semicolons (`;`)**.\n"
-            "Example: `/setmeetup July 30 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema`", # Fixed backticks
-            parse_mode=ParseMode.MARKDOWN # Added parse_mode
+            "Example: `/setmeetup July 30 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema`",
+            parse_mode=ParseMode.MARKDOWN
         )
         return
 
@@ -495,7 +494,7 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Time: {NEXT_MEETUP_TIME_OF_DAY}\n"
         f"Location Display: {NEXT_MEETUP_LOCATION_DISPLAY}\n"
         f"Location URL: {NEXT_MEETUP_LOCATION_URL}",
-        parse_mode=ParseMode.MARKDOWN # Added parse_mode
+        parse_mode=ParseMode.MARKDOWN
     )
 
 # --- MODIFIED: suggest_film to prompt for input ---
@@ -531,7 +530,7 @@ async def show_film_suggestions(update: Update, context: ContextTypes.DEFAULT_TY
     await update.message.reply_text(
         "🎬 Current Film Suggestions:\n"
         f"{suggestions_list}\n\n",
-        parse_mode=ParseMode.MARKDOWN # Changed to Markdown for consistency
+        parse_mode=ParseMode.MARKDOWN
     )
 
 async def show_theme_suggestions(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -550,7 +549,7 @@ async def show_theme_suggestions(update: Update, context: ContextTypes.DEFAULT_T
         "🎨 Current Theme Suggestions:\n"
         f"{suggestions_list}\n\n"
         "Let's pick a fun theme for our next meetup!",
-        parse_mode=ParseMode.MARKDOWN # Changed to Markdown for consistency
+        parse_mode=ParseMode.MARKDOWN
     )
 
 # --- NEW: Handler for general text messages based on state ---
@@ -599,10 +598,6 @@ async def handle_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Reset the state
         context.user_data['state'] = None
     
-    # You can add an 'else' here if you want to respond to arbitrary messages
-    # else:
-    #     await update.message.reply_text("I'm not sure what to do with that. Type /help to see my commands.")
-
 
 # --- Admin Removal Commands ---
 async def remove_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -718,21 +713,16 @@ async def run_server():
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("meetup", meetup_command))
     application.add_handler(CommandHandler("setmeetup", setmeetup_command))
-    
-    # MODIFIED: These command handlers now only *start* the conversation
     application.add_handler(CommandHandler("suggestfilm", suggest_film))
     application.add_handler(CommandHandler("suggesttheme", suggest_theme))
-
-    application.add_handler(CommandHandler("suggestionsfilm", show_film_suggestions))
-    application.add_handler(CommandHandler("suggestionstheme", show_theme_suggestions))
-
+    application.add_handler(CommandHandler("filmsuggestions", show_film_suggestions)) 
+    application.add_handler(CommandHandler("themesuggestions", show_theme_suggestions))
     application.add_handler(CommandHandler("removefilm", remove_film))
     application.add_handler(CommandHandler("removetheme", remove_theme))
 
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members))
     
-    # NEW: Add a MessageHandler to catch text input for suggestions
-    # It should come *after* all CommandHandlers so that commands are processed first
+
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_input))
 
 
