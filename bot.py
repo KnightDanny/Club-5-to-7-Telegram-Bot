@@ -48,7 +48,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Here are the commands you can use with me:\n\n"
         "⏰ /meetup - See the details of the club's next meetup.\n\n"
         "🎬 /suggestfilm [Film Title] - Suggest a film for the club to watch.\n" 
-        "💡 /suggesttheme [Theme Suggestion] - Suggest a theme for this month.\n\n" 
+        "💡 /suggesttheme [Theme Suggestion] - Suggest a theme for the month.\n\n" 
         "🎥 /suggestionsfilm - See the list of suggested films.\n" 
         "🎨 /suggestionstheme - See the list of suggested themes.\n\n"
         "❓ /help - See this list of commands again."
