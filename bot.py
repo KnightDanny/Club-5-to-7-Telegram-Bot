@@ -395,10 +395,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         help_message = (
             "Here are the commands you can use with me:\n\n"
             "⏰ /meetup - See the details of the club's next meetup.\n\n"
-            "🎬 /suggestfilm [Film Title] - Suggest a film for the club to watch.\n"
-            "💡 /suggesttheme [Theme Suggestion] - Suggest a theme for the month.\n\n"
+            "🎬 /suggestfilm - Suggest a film for the club to watch.\n" # Changed
+            "💡 /suggesttheme - Suggest a theme for the month.\n\n" # Changed
             "🎥 /suggestionsfilm - See the list of suggested films.\n"
             "🎨 /suggestionstheme - See the list of suggested themes.\n\n"
+            "--- Admin Commands (Authorized Users Only) ---\n" # Added back admin section for clarity
+            "🗓️ /setmeetup [Date] ; [Time] ; [Location Display] ; [Location URL] - Set the next meetup details.\n" # Added back example
+            "🗑️ /removefilm [Exact Film Title] - Remove a film from suggestions.\n" # Added back example
+            "🧹 /removetheme [Exact Theme Suggestion] - Remove a theme from suggestions.\n\n" # Added back example
             "❓ /help - See this list of commands again."
         )
         await update.message.reply_text(help_message)
@@ -439,11 +443,12 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "Please provide the new meetup **date**, **time of day**, **location display text**, and **location URL**.\n"
             "Example:\n"
-            "/setmeetup July 30 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema\n\n\n"
+            "`/setmeetup July 30 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema\n\n\n`" # Fixed backticks
             f"Current Date: {NEXT_MEETUP_DATE}\n"
             f"Current Time: {NEXT_MEETUP_TIME_OF_DAY}\n"
             f"Current Location: {NEXT_MEETUP_LOCATION_DISPLAY}\n"
-            f"Current URL: {NEXT_MEETUP_LOCATION_URL}"
+            f"Current URL: {NEXT_MEETUP_LOCATION_URL}",
+            parse_mode=ParseMode.MARKDOWN # Added parse_mode
         )
         return
 
@@ -452,8 +457,9 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if len(parts) != 4:
         await update.message.reply_text(
-            "Please ensure you separate the date, time of day, location display text, and location URL with **semicolons (;)**.\n"
-            "Example: /setmeetup July 30 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema"
+            "Please ensure you separate the date, time of day, location display text, and location URL with **semicolons (`;`)**.\n"
+            "Example: `/setmeetup July 30 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema`", # Fixed backticks
+            parse_mode=ParseMode.MARKDOWN # Added parse_mode
         )
         return
 
@@ -488,66 +494,27 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Date: {NEXT_MEETUP_DATE}\n"
         f"Time: {NEXT_MEETUP_TIME_OF_DAY}\n"
         f"Location Display: {NEXT_MEETUP_LOCATION_DISPLAY}\n"
-        f"Location URL: {NEXT_MEETUP_LOCATION_URL}"
+        f"Location URL: {NEXT_MEETUP_LOCATION_URL}",
+        parse_mode=ParseMode.MARKDOWN # Added parse_mode
     )
 
+# --- MODIFIED: suggest_film to prompt for input ---
 async def suggest_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
+    
+    # Set state to awaiting film title
+    context.user_data['state'] = 'awaiting_film_title'
+    await update.message.reply_text("🎬 Please send me the film title you want to suggest:")
 
-    if not context.args:
-        await update.message.reply_text(
-            "Please provide the film title you want to suggest. Example:\n"
-            "/suggestfilm The Matrix"
-        )
-        return
-
-    movie_title = " ".join(context.args).strip()
-
-    if not movie_title:
-        await update.message.reply_text("Film title cannot be empty.")
-        return
-    if len(movie_title) > 200:
-        await update.message.reply_text("Film title is too long. Please shorten it.")
-        return
-
-    # Always load data to ensure FILM_SUGGESTIONS is current before checking/adding
-    load_all_data()
-
-    if movie_title not in FILM_SUGGESTIONS:
-        add_film_suggestion_and_save(movie_title)
-        await update.message.reply_text(f"🎬 Thank you! '{movie_title}' has been added to the film suggestions list.")
-    else:
-        await update.message.reply_text(f"'{movie_title}' is already in the film suggestions list. Thanks for reminding!")
-
+# --- MODIFIED: suggest_theme to prompt for input ---
 async def suggest_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
 
-    if not context.args:
-        await update.message.reply_text(
-            "Please provide the theme you want to suggest. Example:\n"
-            "/suggesttheme Sci-Fi Classics"
-        )
-        return
-
-    theme_suggestion = " ".join(context.args).strip()
-
-    if not theme_suggestion:
-        await update.message.reply_text("Theme suggestion cannot be empty.")
-        return
-    if len(theme_suggestion) > 200:
-        await update.message.reply_text("Theme suggestion is too long. Please shorten it.")
-        return
-
-    # Always load data to ensure THEME_SUGGESTIONS is current before checking/adding
-    load_all_data()
-
-    if theme_suggestion not in THEME_SUGGESTIONS:
-        add_theme_suggestion_and_save(theme_suggestion)
-        await update.message.reply_text(f"💡 Thank you! '{theme_suggestion}' has been added to the theme suggestions list.")
-    else:
-        await update.message.reply_text(f"'{theme_suggestion}' is already in the theme suggestions list. Thanks for reminding!")
+    # Set state to awaiting theme suggestion
+    context.user_data['state'] = 'awaiting_theme_suggestion'
+    await update.message.reply_text("💡 Please send me the theme you want to suggest:")
 
 async def show_film_suggestions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
@@ -557,13 +524,14 @@ async def show_film_suggestions(update: Update, context: ContextTypes.DEFAULT_TY
     load_all_data()
 
     if not FILM_SUGGESTIONS:
-        await update.message.reply_text("💡 No film suggestions yet! Be the first to add one with /suggestfilm [Film Title]")
+        await update.message.reply_text("💡 No film suggestions yet! Be the first to add one with /suggestfilm")
         return
 
     suggestions_list = "\n".join([f"{i+1}. {movie}" for i, movie in enumerate(FILM_SUGGESTIONS)])
     await update.message.reply_text(
         "🎬 Current Film Suggestions:\n"
-        f"{suggestions_list}\n\n"
+        f"{suggestions_list}\n\n",
+        parse_mode=ParseMode.MARKDOWN # Changed to Markdown for consistency
     )
 
 async def show_theme_suggestions(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -574,16 +542,69 @@ async def show_theme_suggestions(update: Update, context: ContextTypes.DEFAULT_T
     load_all_data()
 
     if not THEME_SUGGESTIONS:
-        await update.message.reply_text("💡 No theme suggestions yet! Be the first to add one with /suggesttheme [Theme Suggestion]")
+        await update.message.reply_text("💡 No theme suggestions yet! Be the first to add one with /suggesttheme")
         return
 
     suggestions_list = "\n".join([f"{i+1}. {theme}" for i, theme in enumerate(THEME_SUGGESTIONS)])
     await update.message.reply_text(
         "🎨 Current Theme Suggestions:\n"
         f"{suggestions_list}\n\n"
+        "Let's pick a fun theme for our next meetup!",
+        parse_mode=ParseMode.MARKDOWN # Changed to Markdown for consistency
     )
 
-# --- NEW Admin Removal Commands ---
+# --- NEW: Handler for general text messages based on state ---
+async def handle_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return
+
+    user_text = update.message.text.strip()
+    current_state = context.user_data.get('state')
+
+    if current_state == 'awaiting_film_title':
+        movie_title = user_text
+        if not movie_title:
+            await update.message.reply_text("Film title cannot be empty. Please try again.")
+            return
+        if len(movie_title) > 200:
+            await update.message.reply_text("Film title is too long. Please shorten it.")
+            return
+
+        load_all_data() # Always load data to ensure FILM_SUGGESTIONS is current
+        if movie_title not in FILM_SUGGESTIONS:
+            add_film_suggestion_and_save(movie_title)
+            await update.message.reply_text(f"🎬 Thank you! `'{movie_title}'` has been added to the film suggestions list.", parse_mode=ParseMode.MARKDOWN)
+        else:
+            await update.message.reply_text(f"`'{movie_title}'` is already in the film suggestions list. Thanks for reminding!", parse_mode=ParseMode.MARKDOWN)
+        
+        # Reset the state
+        context.user_data['state'] = None
+
+    elif current_state == 'awaiting_theme_suggestion':
+        theme_suggestion = user_text
+        if not theme_suggestion:
+            await update.message.reply_text("Theme suggestion cannot be empty. Please try again.")
+            return
+        if len(theme_suggestion) > 200:
+            await update.message.reply_text("Theme suggestion is too long. Please shorten it.")
+            return
+
+        load_all_data() # Always load data to ensure THEME_SUGGESTIONS is current
+        if theme_suggestion not in THEME_SUGGESTIONS:
+            add_theme_suggestion_and_save(theme_suggestion)
+            await update.message.reply_text(f"💡 Thank you! `'{theme_suggestion}'` has been added to the theme suggestions list.", parse_mode=ParseMode.MARKDOWN)
+        else:
+            await update.message.reply_text(f"`'{theme_suggestion}'` is already in the theme suggestions list. Thanks for reminding!", parse_mode=ParseMode.MARKDOWN)
+        
+        # Reset the state
+        context.user_data['state'] = None
+    
+    # You can add an 'else' here if you want to respond to arbitrary messages
+    # else:
+    #     await update.message.reply_text("I'm not sure what to do with that. Type /help to see my commands.")
+
+
+# --- Admin Removal Commands ---
 async def remove_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
@@ -600,7 +621,8 @@ async def remove_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text(
             "Please provide the exact film title to remove. Example:\n"
-            "/removefilm The Matrix"
+            "`/removefilm The Matrix`",
+            parse_mode=ParseMode.MARKDOWN
         )
         return
 
@@ -609,13 +631,13 @@ async def remove_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
     load_all_data() # Ensure global list is up-to-date for checking
 
     if movie_title not in FILM_SUGGESTIONS:
-        await update.message.reply_text(f"'{movie_title}' is not in the current film suggestions list.")
+        await update.message.reply_text(f"`'{movie_title}'` is not in the current film suggestions list.", parse_mode=ParseMode.MARKDOWN)
         return
 
     if remove_film_suggestion_and_save(movie_title):
-        await update.message.reply_text(f"✅ Film '{movie_title}' has been removed from suggestions.")
+        await update.message.reply_text(f"✅ Film `'{movie_title}'` has been removed from suggestions.", parse_mode=ParseMode.MARKDOWN)
     else:
-        await update.message.reply_text(f"❌ Failed to remove film '{movie_title}'. Please check logs for errors.")
+        await update.message.reply_text(f"❌ Failed to remove film `'{movie_title}'`. Please check logs for errors.", parse_mode=ParseMode.MARKDOWN)
 
 async def remove_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
@@ -633,7 +655,8 @@ async def remove_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text(
             "Please provide the exact theme to remove. Example:\n"
-            "/removetheme Sci-Fi Classics"
+            "`/removetheme Sci-Fi Classics`",
+            parse_mode=ParseMode.MARKDOWN
         )
         return
 
@@ -642,13 +665,13 @@ async def remove_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     load_all_data() # Ensure global list is up-to-date for checking
 
     if theme_suggestion not in THEME_SUGGESTIONS:
-        await update.message.reply_text(f"'{theme_suggestion}' is not in the current theme suggestions list.")
+        await update.message.reply_text(f"`'{theme_suggestion}'` is not in the current theme suggestions list.", parse_mode=ParseMode.MARKDOWN)
         return
 
     if remove_theme_suggestion_and_save(theme_suggestion):
-        await update.message.reply_text(f"✅ Theme '{theme_suggestion}' has been removed from suggestions.")
+        await update.message.reply_text(f"✅ Theme `'{theme_suggestion}'` has been removed from suggestions.", parse_mode=ParseMode.MARKDOWN)
     else:
-        await update.message.reply_text(f"❌ Failed to remove theme '{theme_suggestion}'. Please check logs for errors.")
+        await update.message.reply_text(f"❌ Failed to remove theme `'{theme_suggestion}'`. Please check logs for errors.", parse_mode=ParseMode.MARKDOWN)
 
 
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -695,16 +718,23 @@ async def run_server():
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("meetup", meetup_command))
     application.add_handler(CommandHandler("setmeetup", setmeetup_command))
+    
+    # MODIFIED: These command handlers now only *start* the conversation
     application.add_handler(CommandHandler("suggestfilm", suggest_film))
-    application.add_handler(CommandHandler("suggestionsfilm", show_film_suggestions))
     application.add_handler(CommandHandler("suggesttheme", suggest_theme))
+
+    application.add_handler(CommandHandler("suggestionsfilm", show_film_suggestions))
     application.add_handler(CommandHandler("suggestionstheme", show_theme_suggestions))
 
-    # --- NEW Command Handlers (for removal) ---
     application.add_handler(CommandHandler("removefilm", remove_film))
     application.add_handler(CommandHandler("removetheme", remove_theme))
 
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members))
+    
+    # NEW: Add a MessageHandler to catch text input for suggestions
+    # It should come *after* all CommandHandlers so that commands are processed first
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_input))
+
 
     # --- Initialize and Load Data Based on STORAGE_TYPE ---
     if STORAGE_TYPE == "postgresql":
