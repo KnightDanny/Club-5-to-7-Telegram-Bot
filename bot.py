@@ -379,9 +379,13 @@ def remove_theme_suggestion_and_save(theme):
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message:
         welcome_message = (
-            "Hello! 👋 I'm Cleo, your Club 5 to 7 Companion.\n\n"
-            "I can help you keep track of our movie club meetups and also receive your movie and theme suggestions. You can also view suggestions others have made\n\n"
-            "Type /help to see a list of commands you can use."
+            "🎉 **Greetings, fellow cinephile! I'm Cleo, your dedicated Club 5 to 7 Companion!** 🎉\n\n"
+            "I'm here to help our movie club stay organized and vibrant. Think of me as your personal assistant for all things related to our film discussions and meetups. \n\n"
+            "Here's what I can do for you:\n\n"
+            "📅 **Stay Updated:** Get the latest details on our next club meetup – where, when, and how to find us!\n"
+            "💡 **Share Your Ideas:** Have a brilliant film in mind that the club *must* watch? Or perhaps a fascinating theme you'd love to explore? Send them my way!\n"
+            "👀 **Discover Suggestions:** Curious what other members are thinking? You can easily view all the films and themes that have been suggested so far.\n\n"
+            "Ready to dive into the world of cinema with Club 5 to 7? Just type /help to see a full list of commands and let's get started!"
         )
         await update.message.reply_text(welcome_message)
 
@@ -447,7 +451,7 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if len(parts) != 4:
         await update.message.reply_text(
-            "Please ensure you separate the date, time of day, location display text, and location URL with **semicolons (`;`)**.\n"
+            "Please ensure you separate the date, time of day, location display text, and location URL with **semicolons (;)**.\n"
             "Example: /setmeetup July 30 ; 6:00 PM ; Downtown Cinema ; https://maps.app.goo.gl/DowntownCinema"
         )
         return
@@ -493,7 +497,7 @@ async def suggest_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text(
             "Please provide the film title you want to suggest. Example:\n"
-            "`/suggestfilm The Matrix`"
+            "/suggestfilm The Matrix"
         )
         return
 
@@ -522,7 +526,7 @@ async def suggest_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text(
             "Please provide the theme you want to suggest. Example:\n"
-            "`/suggesttheme Sci-Fi Classics`"
+            "/suggesttheme Sci-Fi Classics"
         )
         return
 
@@ -552,7 +556,7 @@ async def show_film_suggestions(update: Update, context: ContextTypes.DEFAULT_TY
     load_all_data()
 
     if not FILM_SUGGESTIONS:
-        await update.message.reply_text("💡 No film suggestions yet! Be the first to add one with `/suggestfilm [Film Title]`")
+        await update.message.reply_text("💡 No film suggestions yet! Be the first to add one with /suggestfilm [Film Title]")
         return
 
     suggestions_list = "\n".join([f"{i+1}. {movie}" for i, movie in enumerate(FILM_SUGGESTIONS)])
@@ -569,7 +573,7 @@ async def show_theme_suggestions(update: Update, context: ContextTypes.DEFAULT_T
     load_all_data()
 
     if not THEME_SUGGESTIONS:
-        await update.message.reply_text("💡 No theme suggestions yet! Be the first to add one with `/suggesttheme [Theme Suggestion]`")
+        await update.message.reply_text("💡 No theme suggestions yet! Be the first to add one with /suggesttheme [Theme Suggestion]")
         return
 
     suggestions_list = "\n".join([f"{i+1}. {theme}" for i, theme in enumerate(THEME_SUGGESTIONS)])
@@ -595,7 +599,7 @@ async def remove_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text(
             "Please provide the exact film title to remove. Example:\n"
-            "`/removefilm The Matrix`"
+            "/removefilm The Matrix"
         )
         return
 
@@ -628,7 +632,7 @@ async def remove_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text(
             "Please provide the exact theme to remove. Example:\n"
-            "`/removetheme Sci-Fi Classics`"
+            "/removetheme Sci-Fi Classics"
         )
         return
 
@@ -647,7 +651,6 @@ async def remove_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Greets new members when they join the group."""
     if not update.message:
         return
 
