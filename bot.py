@@ -31,7 +31,7 @@ PORT = int(os.environ.get("PORT", 8000))
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
 # Global lists for suggestions
-MOVIE_SUGGESTIONS = []
+FILM_SUGGESTIONS = []
 THEME_SUGGESTIONS = []
 
 # Available commands to use in bot
@@ -47,9 +47,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     help_message = (
         "Here are the commands you can use with me:\n\n"
         "⏰ /meetup - See the details of the club's next meetup.\n\n"
-        "🎬 /suggestmovie [Movie Title] - Suggest a movie for the club to watch.\n" 
-        "💡 /suggesttheme [Theme Suggestion] - Suggest a theme for a future meetup.\n\n" 
-        "🍿 /suggestionsmovie - See the list of suggested movies.\n" 
+        "🎬 /suggestfilm [Film Title] - Suggest a film for the club to watch.\n" 
+        "💡 /suggesttheme [Theme Suggestion] - Suggest a theme for this month.\n\n" 
+        "🎥 /suggestionsfilm - See the list of suggested films.\n" 
         "🎨 /suggestionstheme - See the list of suggested themes.\n\n"
         "❓ /help - See this list of commands again."
     )
@@ -127,37 +127,37 @@ async def setmeetup_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     NEXT_MEETUP_LOCATION_URL = new_location_url_str
 
     await update.message.reply_text(
-        f"✅ Movie meetup details updated!\n"
+        f"✅ Club meetup details updated!\n"
         f"Date: {NEXT_MEETUP_DATE}\n"
         f"Time: {NEXT_MEETUP_TIME_OF_DAY}\n"
         f"Location Display: {NEXT_MEETUP_LOCATION_DISPLAY}\n"
         f"Location URL: {NEXT_MEETUP_LOCATION_URL}"
     )
 
-async def suggest_movie(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global MOVIE_SUGGESTIONS
+async def suggest_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global FILM_SUGGESTIONS
 
     if not context.args:
         await update.message.reply_text(
-            "Please provide the movie title you want to suggest. Example:\n"
-            "`/suggestmovie The Matrix`"
+            "Please provide the film title you want to suggest. Example:\n"
+            "`/suggestfilm The Matrix`"
         )
         return
 
     movie_title = " ".join(context.args).strip()
 
     if not movie_title:
-        await update.message.reply_text("Movie title cannot be empty.")
+        await update.message.reply_text("Film title cannot be empty.")
         return
     if len(movie_title) > 200: # Limit
-        await update.message.reply_text("Movie title is too long. Please shorten it.")
+        await update.message.reply_text("Film title is too long. Please shorten it.")
         return
 
-    if movie_title not in MOVIE_SUGGESTIONS:
-        MOVIE_SUGGESTIONS.append(movie_title)
-        await update.message.reply_text(f"🎬 Thank you! '{movie_title}' has been added to the movie suggestions list.")
+    if movie_title not in FILM_SUGGESTIONS_SUGGESTIONS:
+        FILM_SUGGESTIONS.append(movie_title)
+        await update.message.reply_text(f"🎬 Thank you! '{movie_title}' has been added to the film suggestions list.")
     else:
-        await update.message.reply_text(f"'{movie_title}' is already in the movie suggestions list. Thanks for reminding!")
+        await update.message.reply_text(f"'{movie_title}' is already in the film suggestions list. Thanks for reminding!")
 
 async def suggest_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global THEME_SUGGESTIONS
@@ -184,16 +184,15 @@ async def suggest_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(f"'{theme_suggestion}' is already in the theme suggestions list. Thanks for reminding!")
 
-async def show_movie_suggestions(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not MOVIE_SUGGESTIONS:
-        await update.message.reply_text("💡 No movie suggestions yet! Be the first to add one with `/suggestmovie [Movie Title]`") 
+async def show_film_suggestions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not FILM_SUGGESTIONS:
+        await update.message.reply_text("💡 No film suggestions yet! Be the first to add one with `/suggestfilm [Film Title]`") 
         return
 
-    suggestions_list = "\n".join([f"{i+1}. {movie}" for i, movie in enumerate(MOVIE_SUGGESTIONS)])
+    suggestions_list = "\n".join([f"{i+1}. {movie}" for i, movie in enumerate(FILM_SUGGESTIONS)])
     await update.message.reply_text(
-        "🎬 Current Movie Suggestions:\n"
+        "🎬 Current Film Suggestions:\n"
         f"{suggestions_list}\n\n"
-        "Vote for your favorite next week!"
     )
 
 async def show_theme_suggestions(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -246,8 +245,8 @@ async def run_server():
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("meetup", meetup_command))
     application.add_handler(CommandHandler("setmeetup", setmeetup_command))
-    application.add_handler(CommandHandler("suggestmovie", suggest_movie)) 
-    application.add_handler(CommandHandler("suggestionsmovie", show_movie_suggestions)) 
+    application.add_handler(CommandHandler("suggestfilm", suggest_film)) 
+    application.add_handler(CommandHandler("suggestionsfilm", show_film_suggestions)) 
     application.add_handler(CommandHandler("suggesttheme", suggest_theme)) 
     application.add_handler(CommandHandler("suggestionstheme", show_theme_suggestions))
     
