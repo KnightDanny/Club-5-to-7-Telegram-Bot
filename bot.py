@@ -52,7 +52,7 @@ THEME_SUGGESTIONS = []
 if STORAGE_TYPE == "postgresql":
     try:
         import psycopg2
-        from psycopg2 import sql
+        from psycopg2 import sql # sql is imported but not explicitly used in provided snippets, kept for potential future use
     except ImportError:
         print("Error: psycopg2-binary not installed. Please install it with 'pip install psycopg2-binary' if you use PostgreSQL storage.")
         psycopg2 = None # Mark as unavailable
@@ -169,7 +169,7 @@ def load_data_db():
                 if meetup_record:
                     NEXT_MEETUP_DATE, NEXT_MEETUP_TIME_OF_DAY, NEXT_MEETUP_LOCATION_DISPLAY, NEXT_MEETUP_LOCATION_URL = meetup_record
                 else:
-                    print("No meetup details found in DB, using defaults.")
+                    print("No meetup details found in DB, using defaults and inserting them.")
                     # Insert defaults if table is empty
                     cur.execute(
                         "INSERT INTO meetup_details (meetup_date, meetup_time_of_day, location_display, location_url) VALUES (%s, %s, %s, %s);",
@@ -254,7 +254,42 @@ def add_theme_suggestion_to_db(theme):
     else:
         print("Could not add theme suggestion to database: No DB connection.")
 
-# --- Global Load/Save Functions (calls appropriate backend) ---
+# --- NEW: Removal functions for PostgreSQL ---
+def remove_film_from_db(title):
+    conn = get_db_connection()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM film_suggestions WHERE title = %s;", (title,))
+                rows_deleted = cur.rowcount
+                conn.commit()
+                return rows_deleted > 0 # Return True if at least one row was deleted
+        except Exception as e:
+            print(f"Error removing film suggestion from DB: {e}")
+            return False
+        finally:
+            conn.close()
+    print("Could not remove film suggestion from database: No DB connection.")
+    return False
+
+def remove_theme_from_db(theme):
+    conn = get_db_connection()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM theme_suggestions WHERE theme = %s;", (theme,))
+                rows_deleted = cur.rowcount
+                conn.commit()
+                return rows_deleted > 0 # Return True if at least one row was deleted
+        except Exception as e:
+            print(f"Error removing theme suggestion from DB: {e}")
+            return False
+        finally:
+            conn.close()
+    print("Could not remove theme suggestion from database: No DB connection.")
+    return False
+
+# --- Global Load/Save/Modify Functions (calls appropriate backend) ---
 def reset_to_defaults():
     global NEXT_MEETUP_DATE, NEXT_MEETUP_TIME_OF_DAY, NEXT_MEETUP_LOCATION_DISPLAY, NEXT_MEETUP_LOCATION_URL, FILM_SUGGESTIONS, THEME_SUGGESTIONS
     NEXT_MEETUP_DATE = DEFAULT_MEETUP_DATE
@@ -291,7 +326,7 @@ def add_film_suggestion_and_save(title):
         save_data_json()
     elif STORAGE_TYPE == "postgresql":
         add_film_suggestion_to_db(title)
-        load_all_data() # Reload all data to ensure global list is updated from DB
+        load_all_data() # Reload to update global list from DB after addition
     else:
         print(f"Invalid STORAGE_TYPE '{STORAGE_TYPE}'. Film suggestion not saved.")
 
@@ -302,9 +337,42 @@ def add_theme_suggestion_and_save(theme):
         save_data_json()
     elif STORAGE_TYPE == "postgresql":
         add_theme_suggestion_to_db(theme)
-        load_all_data() # Reload all data to ensure global list is updated from DB
+        load_all_data() # Reload to update global list from DB after addition
     else:
         print(f"Invalid STORAGE_TYPE '{STORAGE_TYPE}'. Theme suggestion not saved.")
+
+# --- NEW: Removal wrappers ---
+def remove_film_suggestion_and_save(title):
+    global FILM_SUGGESTIONS
+    removed = False
+    if STORAGE_TYPE == "json":
+        if title in FILM_SUGGESTIONS:
+            FILM_SUGGESTIONS.remove(title)
+            save_data_json()
+            removed = True
+    elif STORAGE_TYPE == "postgresql":
+        removed = remove_film_from_db(title)
+        if removed: # Only reload if something was actually removed from DB
+            load_all_data() # Reload to update global list from DB
+    else:
+        print(f"Invalid STORAGE_TYPE '{STORAGE_TYPE}'. Film suggestion not removed.")
+    return removed
+
+def remove_theme_suggestion_and_save(theme):
+    global THEME_SUGGESTIONS
+    removed = False
+    if STORAGE_TYPE == "json":
+        if theme in THEME_SUGGESTIONS:
+            THEME_SUGGESTIONS.remove(theme)
+            save_data_json()
+            removed = True
+    elif STORAGE_TYPE == "postgresql":
+        removed = remove_theme_from_db(theme)
+        if removed: # Only reload if something was actually removed from DB
+            load_all_data() # Reload to update global list from DB
+    else:
+        print(f"Invalid STORAGE_TYPE '{STORAGE_TYPE}'. Theme suggestion not removed.")
+    return removed
 
 
 # --- Telegram Bot Command Handlers ---
@@ -510,6 +578,74 @@ async def show_theme_suggestions(update: Update, context: ContextTypes.DEFAULT_T
         f"{suggestions_list}\n\n"
     )
 
+# --- NEW Admin Removal Commands ---
+async def remove_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message:
+        return
+
+    user_id = update.effective_user.id
+
+    if ADMIN_USER_ID is None:
+        await update.message.reply_text("Admin User ID is not configured. /removefilm command is disabled.")
+        return
+    if user_id != ADMIN_USER_ID:
+        await update.message.reply_text("🚫 You are not authorized to use this command.")
+        return
+
+    if not context.args:
+        await update.message.reply_text(
+            "Please provide the exact film title to remove. Example:\n"
+            "`/removefilm The Matrix`"
+        )
+        return
+
+    movie_title = " ".join(context.args).strip()
+
+    load_all_data() # Ensure global list is up-to-date for checking
+
+    if movie_title not in FILM_SUGGESTIONS:
+        await update.message.reply_text(f"'{movie_title}' is not in the current film suggestions list.")
+        return
+
+    if remove_film_suggestion_and_save(movie_title):
+        await update.message.reply_text(f"✅ Film '{movie_title}' has been removed from suggestions.")
+    else:
+        await update.message.reply_text(f"❌ Failed to remove film '{movie_title}'. Please check logs for errors.")
+
+async def remove_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message:
+        return
+
+    user_id = update.effective_user.id
+
+    if ADMIN_USER_ID is None:
+        await update.message.reply_text("Admin User ID is not configured. /removetheme command is disabled.")
+        return
+    if user_id != ADMIN_USER_ID:
+        await update.message.reply_text("🚫 You are not authorized to use this command.")
+        return
+
+    if not context.args:
+        await update.message.reply_text(
+            "Please provide the exact theme to remove. Example:\n"
+            "`/removetheme Sci-Fi Classics`"
+        )
+        return
+
+    theme_suggestion = " ".join(context.args).strip()
+
+    load_all_data() # Ensure global list is up-to-date for checking
+
+    if theme_suggestion not in THEME_SUGGESTIONS:
+        await update.message.reply_text(f"'{theme_suggestion}' is not in the current theme suggestions list.")
+        return
+
+    if remove_theme_suggestion_and_save(theme_suggestion):
+        await update.message.reply_text(f"✅ Theme '{theme_suggestion}' has been removed from suggestions.")
+    else:
+        await update.message.reply_text(f"❌ Failed to remove theme '{theme_suggestion}'. Please check logs for errors.")
+
+
 async def welcome_new_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Greets new members when they join the group."""
     if not update.message:
@@ -559,6 +695,10 @@ async def run_server():
     application.add_handler(CommandHandler("suggestionsfilm", show_film_suggestions))
     application.add_handler(CommandHandler("suggesttheme", suggest_theme))
     application.add_handler(CommandHandler("suggestionstheme", show_theme_suggestions))
+
+    # --- NEW Command Handlers (for removal) ---
+    application.add_handler(CommandHandler("removefilm", remove_film))
+    application.add_handler(CommandHandler("removetheme", remove_theme))
 
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_members))
 
