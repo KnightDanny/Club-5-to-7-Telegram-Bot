@@ -395,10 +395,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         help_message = (
             "Here are the commands you can use with me:\n\n"
             "⏰ /meetup - See the details of the club's next meetup.\n\n"
-            "🎬 /suggestfilm - Suggest a film for the club to watch.\n"
-            "💡 /suggesttheme - Suggest a theme for the month.\n\n"
-            "🎥 /filmsuggestions - See the list of suggested films.\n" # RENAMED
-            "🎨 /themesuggestions - See the list of suggested themes.\n\n" # RENAMED
+            "💡 /suggesttheme - Suggest a theme for the month.\n"
+            "🎬 /suggestfilm - Suggest a film for the club to watch.\n\n"
+            "🎨 /themesuggestions - See the list of suggested themes.\n"
+            "🎥 /filmsuggestions - See the list of suggested films.\n\n"
             "--- Admin Commands (Authorized Users Only) ---\n"
             "🗓️ /setmeetup [Date] ; [Time] ; [Location Display] ; [Location URL] - Set the next meetup details.\n"
             "🗑️ /removefilm [Exact Film Title] - Remove a film from suggestions.\n"
