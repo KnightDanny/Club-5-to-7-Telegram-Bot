@@ -379,12 +379,13 @@ def remove_theme_suggestion_and_save(theme):
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message:
         welcome_message = (
-            "🎉 **Greetings, fellow cinephile! I'm Cleo, your dedicated Club 5 to 7 Companion!** 🎉\n\n"
+            "🎉 Greetings, fellow cinephile!\n"
+            "I'm Cleo, your dedicated Club 5 to 7 Companion!🎉\n\n"
             "I'm here to help our movie club stay organized and vibrant. Think of me as your personal assistant for all things related to our film discussions and meetups. \n\n"
             "Here's what I can do for you:\n\n"
-            "📅 **Stay Updated:** Get the latest details on our next club meetup – where, when, and how to find us!\n"
-            "💡 **Share Your Ideas:** Have a brilliant film in mind that the club *must* watch? Or perhaps a fascinating theme you'd love to explore? Send them my way!\n"
-            "👀 **Discover Suggestions:** Curious what other members are thinking? You can easily view all the films and themes that have been suggested so far.\n\n"
+            "📅 Stay Updated: Get the latest details on our next club meetup"
+            "💡 Share Your Ideas: Have a brilliant film in mind that the club must watch? Or perhaps a fascinating theme you'd love to explore? Send them my way!\n"
+            "👀 Discover Suggestions: Curious what other members are thinking? You can easily view all the films and themes that have been suggested so far.\n\n"
             "Ready to dive into the world of cinema with Club 5 to 7? Just type /help to see a full list of commands and let's get started!"
         )
         await update.message.reply_text(welcome_message)
