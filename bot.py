@@ -153,7 +153,7 @@ async def suggest_film(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Film title is too long. Please shorten it.")
         return
 
-    if movie_title not in FILM_SUGGESTIONS_SUGGESTIONS:
+    if movie_title not in FILM_SUGGESTIONS:
         FILM_SUGGESTIONS.append(movie_title)
         await update.message.reply_text(f"🎬 Thank you! '{movie_title}' has been added to the film suggestions list.")
     else:
