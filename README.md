@@ -42,4 +42,42 @@ While many simple bots use "polling" (constantly asking Telegram "do you have ne
 Since the bot relies on network requests (Telegram API) and database operations, I utilized Python's `async` and `await` syntax. This ensures that while the bot is waiting for a database query to finish or a message to send, it doesn't freeze and can process requests from other users concurrently.
 
 ### 4. State Management
-For commands like `/suggestfilm`, I implemented a simple state machine using `context.user_data`. Instead of forcing users to type complex commands like `/suggestfilm The Matrix`, the bot prompts them conversationally ("Please send me the film title..."). This
+For commands like `/suggestfilm`, I implemented a simple state machine using `context.user_data`. Instead of forcing users to type complex commands like `/suggestfilm The Matrix`, the bot prompts them conversationally ("Please send me the film title..."). This significantly improves the user experience on mobile devices.
+
+## 🚀 Installation and Usage
+
+### Prerequisites
+* Python 3.10+
+* A Telegram Bot Token (via BotFather)
+* (Optional) A PostgreSQL database URL
+
+### Setup
+
+1.  **Install dependencies:**
+
+    Using Poetry:
+    ```bash
+    pip install poetry
+    poetry install
+    ```
+
+    Or using standard pip:
+    ```bash
+    pip install fastapi uvicorn python-telegram-bot psycopg2-binary
+    ```
+
+2.  **Set Environment Variables:**
+    Create a `.env` file or export them in your terminal:
+
+    ```bash
+    export BOT_TOKEN="your_telegram_bot_token"
+    export ADMIN_USER_ID="your_telegram_user_id"
+    export WEBHOOK_URL="[https://your-server-url.com](https://your-server-url.com)"
+    export STORAGE_TYPE="json"  # or "postgresql"
+    ```
+
+3.  **Run the bot:**
+
+    ```bash
+    python bot.py
+    ```
