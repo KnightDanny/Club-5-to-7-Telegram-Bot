@@ -1,7 +1,5 @@
 # Club 5 to 7 Telegram Bot
 
-**Video Demo:** [Click here to watch the demo](<INSERT YOUR YOUTUBE VIDEO URL HERE>)
-
 ## 📖 Description
 
 The **Club 5 to 7 Bot** is a comprehensive management tool designed for a local film club. It serves as an interactive assistant to help members stay organized, crowdsource movie ideas, and manage monthly meetups.
